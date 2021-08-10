@@ -124,29 +124,35 @@ alpha = 0.2
 
 banditVeryGreedy = Bandit(10, 1.0, 0, 3.0)
 banditVeryGreedyRewards = np.array(())
+banditVeryGreedyRewards = np.append(banditVeryGreedyRewards, 0)
 temp = np.array(())
 for i in range (steps):
     temp = np.append(temp, banditVeryGreedy.epsilonGreedy())
-    if i % 100 == 0:
-        banditVeryGreedyRewards = np.append(banditVeryGreedyRewards, np.mean(temp))
+    if i % 100 == 0 and i != 0:
+        inx = np.arange(100) + (i-100)
+        banditVeryGreedyRewards = np.append(banditVeryGreedyRewards, np.mean(temp[inx]))
 
 epsilon = 0.005
 banditMedGreedy = Bandit(10, 1.0, 0, 3.0)
 banditMedGreedyRewards = np.array(())
+banditMedGreedyRewards = np.append(banditMedGreedyRewards, 0)
 temp = np.array(())
 for i in range (steps):
     temp = np.append(temp, banditMedGreedy.epsilonGreedy())
-    if i % 100 == 0:
-        banditMedGreedyRewards = np.append(banditMedGreedyRewards, np.mean(temp))
+    if i % 100 == 0 and i != 0:
+        inx = np.arange(100) + (i-100)
+        banditMedGreedyRewards = np.append(banditMedGreedyRewards, np.mean(temp[inx]))
 
 epsilon = 0.001
 banditlowGreedy = Bandit(10, 1.0, 0, 3.0)
 banditLowGreedyRewards = np.array(())
+banditLowGreedyRewards = np.append(banditLowGreedyRewards, 0)
 temp = np.array(())
 for i in range (steps):
     temp = np.append(temp, banditlowGreedy.epsilonGreedy())
-    if i % 100 == 0:
-        banditLowGreedyRewards = np.append(banditLowGreedyRewards, np.mean(temp))
+    if i % 100 == 0 and i != 0:
+        inx = np.arange(100) + (i-100)
+        banditLowGreedyRewards = np.append(banditLowGreedyRewards, np.mean(temp[inx]))
 
 # making the epsilon value zero so purely based on initialisation
 # ignore the alpha value - that was just when testing something else
@@ -154,20 +160,24 @@ for i in range (steps):
 alpha = 0.1
 banditHighAlpha = Bandit(10, 1.0, 0, 3.0)
 banditHighAlphaRewards = np.array(())
+banditHighAlphaRewards = np.append(banditHighAlphaRewards, 0)
 temp = np.array(())
 for i in range (steps):
     temp = np.append(temp, banditHighAlpha.optimistic())
-    if i % 100 == 0:
-        banditHighAlphaRewards = np.append(banditHighAlphaRewards, np.mean(temp))
+    if i % 100 == 0 and i != 0:
+        inx = np.arange(100) + (i-100)
+        banditHighAlphaRewards = np.append(banditHighAlphaRewards, np.mean(temp[inx]))
 
 c = 2 
 banditUCB = Bandit(10, 1.0, 0, 3.0)
 banditUCBRewards = np.array(())
+banditUCBRewards = np.append(banditUCBRewards, 0)
 temp = np.array(())
 for i in range (steps):
     temp = np.append(temp, banditUCB.UCB(i))
-    if i % 100 == 0:
-        banditUCBRewards = np.append(banditUCBRewards, np.mean(temp))
+    if i % 100 == 0 and i != 0:
+        inx = np.arange(100) + (i-100)
+        banditUCBRewards = np.append(banditUCBRewards, np.mean(temp[inx]))
 
 # change the values of epsilon and alpha as needed if you change them above
 plt.title("Epsilon Greedy Agents")
