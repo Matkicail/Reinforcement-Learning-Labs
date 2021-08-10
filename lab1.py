@@ -54,6 +54,7 @@ class Bandit:
         # optimal arm
         self.optimalArm = None
         self.initArms()
+        self.optimisticInit()
 
     def initArms(self):
         for i in range(self.numArms):
@@ -93,7 +94,7 @@ class Bandit:
         else:
             return self.arms[self.optimalArm].pullArm()
 
-    def optimisticInit(self, val):
+    def optimisticInit(self):
         # find the maximal mean
         # initialise current guess of arms to be maximal mean * 2 ( just to ensure above )
         if len(self.arms) > 0:
