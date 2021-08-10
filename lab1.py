@@ -101,8 +101,8 @@ class Bandit:
                 self.arms[i].alphaEstimate = 5
     
     def optimistic(self):
-        self.findOptimalAlpha()
-        return self.arms[self.optimalArm].pullArm()
+        self.findOptimal()
+        return self.epsilonGreedy()
 
     def UCB(self, time):
         # we know the action space and their current estimates based on an epsilon greedy - i.e find optimal arm
@@ -147,6 +147,9 @@ for i in range (steps):
     if i % 100 == 0:
         banditLowGreedyRewards = np.append(banditLowGreedyRewards, np.mean(temp))
 
+# making the epsilon value zero so purely based on initialisation
+# ignore the alpha value - that was just when testing something else
+# in the running it will run it but via epsilon greedy but it'll first check out the optimisitic stuff
 alpha = 0.1
 banditHighAlpha = Bandit(10, 1.0, 0, 3.0)
 banditHighAlphaRewards = np.array(())
@@ -156,24 +159,7 @@ for i in range (steps):
     if i % 100 == 0:
         banditHighAlphaRewards = np.append(banditHighAlphaRewards, np.mean(temp))
 
-alpha = 0.005
-banditMedAlpha = Bandit(10, 1.0, 0, 3.0)
-banditMedAlphaRewards = np.array(())
-temp = np.array(())
-for i in range (steps):
-    temp = np.append(temp, banditMedAlpha.optimistic())
-    if i % 100 == 0:
-        banditMedAlphaRewards = np.append(banditMedAlphaRewards, np.mean(temp))
-
-alpha = 0.001
-banditLowAlpha = Bandit(10, 1.0, 0, 3.0)
-banditLowAlphaRewards = np.array(())
-temp = np.array(())
-for i in range (steps):
-    temp = np.append(temp, banditLowAlpha.optimistic())
-    if i % 100 == 0:
-        banditLowAlphaRewards = np.append(banditLowAlphaRewards, np.mean(temp))
-c = 8 
+c = 2 
 banditUCB = Bandit(10, 1.0, 0, 3.0)
 banditUCBRewards = np.array(())
 temp = np.array(())
@@ -195,9 +181,7 @@ plt.show()
 plt.title("Optimistic (Greedy with Optimistic Init) Agents")
 plt.xlabel("Pull Number (x * 100 Runs)")
 plt.ylabel("Average Reward")
-plt.plot(banditHighAlphaRewards, label="alpha = 0.1")
-plt.plot(banditMedAlphaRewards, label="alpha = 0.05")
-plt.plot(banditLowAlphaRewards, label="alpha = 0.001")
+plt.plot(banditHighAlphaRewards, label="Q5 = 5")
 plt.legend()
 plt.show()
 
@@ -212,7 +196,7 @@ plt.title("Agents")
 plt.xlabel("Pull Number (x * 100 Runs)")
 plt.ylabel("Average Reward")
 plt.plot(banditVeryGreedyRewards, label="Greedy: epsilon = 0.1")
-plt.plot(banditHighAlphaRewards, label="Optimistic: alpha = 0.1")
+plt.plot(banditHighAlphaRewards, label="Optimistic: Q5 = 5")
 plt.plot(banditUCBRewards, label="UCB: C = 2")
 plt.legend()
 plt.savefig("ComparisonPlots.jpg")
