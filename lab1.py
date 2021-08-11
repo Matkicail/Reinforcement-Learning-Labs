@@ -189,6 +189,8 @@ plt.plot(banditLowGreedyRewards, label="epsilon = 0.001")
 plt.legend()
 plt.show()
 
+#print(banditHighAlphaRewards)
+
 plt.title("Optimistic (Greedy with Optimistic Init) Agents")
 plt.xlabel("Pull Number (x * 100 Runs)")
 plt.ylabel("Average Reward")
@@ -210,4 +212,15 @@ plt.plot(banditVeryGreedyRewards, label="Greedy: epsilon = 0.1")
 plt.plot(banditHighAlphaRewards, label="Optimistic: Q5 = 5")
 plt.plot(banditUCBRewards, label="UCB: C = 2")
 plt.legend()
+plt.show()
 plt.savefig("ComparisonPlots.jpg")
+
+
+#ignore this for now
+#plt.title("Agents")
+#plt.xlabel("Steps")
+#plt.ylabel("Average Reward")
+#plt.plot(banditVeryGreedyRewards, label="Greedy: epsilon = 0.1")
+#plt.plot(banditHighAlphaRewards, label="Optimistic: Q5 = 5")
+#plt.plot(banditUCBRewards, label="UCB: C = 2")
+#plt.legend()
