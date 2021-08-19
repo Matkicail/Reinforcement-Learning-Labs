@@ -62,61 +62,91 @@ class Agent:
         self.goal = goal
         self.foundGoal = False
         self.gamma = 1
-        self.trajectory = []
+        self.trajectory = ["(" + str(self.stateX) + ", " + str(self.stateY) + ") - Starting State"]
 
     def actionsSet(self, map):
         # so the rules are that we cannot move of the edge
         # after checking this, check to make sure that we are not moving into an obstacle
         actions = []
         # check if we can go up
-        if self.stateX != 0 :
-            if map[self.stateX-1][self.stateY] != self.obstacle == -1:
-                actions.append("N")
+        # if self.stateX != 0 :
+        #     if map[self.stateX-1][self.stateY] != self.obstacle:
+        #         actions.append("N")
         # check if we can go down
-        if self.stateX !=self.rows - 1:
-            if map[self.stateX + 1][self.stateY] != self.obstacle == -1:
-                actions.append("S")
+        # if self.stateX !=self.rows - 1:
+        #     if map[self.stateX + 1][self.stateY] != self.obstacle:
+        #         actions.append("S")
         # check if we can go left
-        if self.stateY != 0 :
-            if map[self.stateX][self.stateY - 1] != self.obstacle == -1:
-                actions.append("W")
+        # if self.stateY != 0 :
+        #     if map[self.stateX][self.stateY - 1] != self.obstacle:
+        #         actions.append("W")
         # check if we can go right
-        if self.stateY !=self.cols - 1:
-            if map[self.stateX][self.stateY + 1] != self.obstacle == -1:
-                actions.append("E")
+        # if self.stateY !=self.cols - 1:
+        #     if map[self.stateX][self.stateY + 1] != self.obstacle:
+        #         actions.append("E")
+        
+        actions.append("N")
+        actions.append("S")
+        actions.append("W")
+        actions.append("E")
+        
         return actions
 
-    def findOptimal(self, actions, valueMap):
+    def findOptimal(self, actions, valueMap, map):
         optimalAction = ""
         greatestReward = 0
         for action in np.arange(len(actions)):
             if action == 0:
                 if actions[action] == "N":
-                    greatestReward = valueMap[self.stateX - 1][self.stateY]
+                    if self.stateX != 0 and map[self.stateX-1][self.stateY] != self.obstacle:
+                        greatestReward = valueMap[self.stateX - 1][self.stateY]
+                    else:
+                        greatestReward = valueMap[self.stateX][self.stateY]
                     optimalAction = "N"
                 elif actions[action] == "S":
-                    greatestReward = valueMap[self.stateX + 1][self.stateY]
+                    if self.stateX != self.rows - 1 and map[self.stateX + 1][self.stateY] != self.obstacle:
+                        greatestReward = valueMap[self.stateX + 1][self.stateY]
+                    else:
+                        greatestReward = valueMap[self.stateX][self.stateY]
                     optimalAction = "S"
                 elif actions[action] == "E":
-                    greatestReward = valueMap[self.stateX][self.stateY + 1]
+                    if self.stateY != self.cols - 1 and map[self.stateX][self.stateY + 1] != self.obstacle:
+                        greatestReward = valueMap[self.stateX][self.stateY + 1]
+                    else:
+                        greatestReward = valueMap[self.stateX][self.stateY]
                     optimalAction = "E"
                 elif actions[action] == "W":
-                    greatestReward = valueMap[self.stateX][self.stateY - 1]
+                    if self.stateY != 0 and map[self.stateX][self.stateY - 1] != self.obstacle:
+                        greatestReward = valueMap[self.stateX][self.stateY - 1]
+                    else:
+                        greatestReward = valueMap[self.stateX][self.stateY]
                     optimalAction = "W"
             else:
                 thisReward = 0
                 thisAction = ""
                 if actions[action] == "N":
-                    thisReward = valueMap[self.stateX - 1][self.stateY]
+                    if self.stateX != 0 and map[self.stateX-1][self.stateY] != self.obstacle:
+                        thisReward = valueMap[self.stateX - 1][self.stateY]
+                    else:
+                        thisReward = valueMap[self.stateX][self.stateY]
                     thisAction = "N"
                 elif actions[action] == "S":
-                    thisReward = valueMap[self.stateX + 1][self.stateY]
+                    if self.stateX != self.rows - 1 and map[self.stateX + 1][self.stateY] != self.obstacle:
+                        thisReward = valueMap[self.stateX + 1][self.stateY]
+                    else:
+                        thisReward = valueMap[self.stateX][self.stateY]
                     thisAction = "S"
                 elif actions[action] == "E":
-                    thisReward = valueMap[self.stateX][self.stateY + 1]
+                    if self.stateY != self.cols - 1 and map[self.stateX][self.stateY + 1] != self.obstacle:
+                        thisReward = valueMap[self.stateX][self.stateY + 1]
+                    else:
+                        thisReward = valueMap[self.stateX][self.stateY]
                     thisAction = "E"
                 elif actions[action] == "W":
-                    thisReward = valueMap[self.stateX][self.stateY - 1]
+                    if self.stateY != 0 and map[self.stateX][self.stateY - 1] != self.obstacle:
+                        thisReward = valueMap[self.stateX][self.stateY - 1]
+                    else:
+                        thisReward = valueMap[self.stateX][self.stateY]
                     thisAction = "W"
                 if greatestReward < thisReward:
                     optimalAction = thisAction
@@ -127,24 +157,28 @@ class Agent:
 
     def epsilonGreedy(self, map, valueMap):
         actions = self.actionsSet(map)
-        optimalAction = self.findOptimal(actions, valueMap)
+        optimalAction = self.findOptimal(actions, valueMap, map)
         prob = np.random.uniform(low=0.0, high=1.0, size=1)[0]
         if prob < self.epsilon:
             # explore
             index = np.random.randint(0, high=len(actions), size=1)[0]
-            return self.executeAction(actions[index])
+            return self.executeAction(actions[index], map)
         else:
-            return self.executeAction(optimalAction)
+            return self.executeAction(optimalAction, map)
     
-    def executeAction(self, action):
+    def executeAction(self, action, map):
         if action == "N":
-            self.stateX -= 1
+            if self.stateX != 0 and map[self.stateX-1][self.stateY] != self.obstacle:
+                self.stateX -= 1
         elif action == "S":
-            self.stateX += 1
+            if self.stateX != self.rows - 1 and map[self.stateX + 1][self.stateY] != self.obstacle:
+                self.stateX += 1
         elif action == "E":
-            self.stateY += 1
+            if self.stateY != self.cols - 1 and map[self.stateX][self.stateY + 1] != self.obstacle:
+                self.stateY += 1
         elif action == "W":
-            self.stateY -= 1
+            if self.stateY != 0 and map[self.stateX][self.stateY - 1] != self.obstacle:
+                self.stateY -= 1
         else:
             print("ERROR NEED A VALID ACTION")
         self.rewards -= 1
@@ -220,7 +254,6 @@ ax.text(0.5, -0.05, "Agent's Total Reward", ha="center", va="top", transform=ax.
 plt.show()
 
 # Agents' trajectories
-
 print("====== Random Agent ======")
 randomAgent.printTrajectory()
 print("====== Greedy Agent ======")
