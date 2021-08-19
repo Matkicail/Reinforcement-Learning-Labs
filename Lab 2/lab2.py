@@ -28,12 +28,15 @@ class GridWorld():
             self.map[i[0]][i[1]] = -1
             self.valueMap[i[0]][i[1]] = self.obstacle
     
+    # Setting the initial state value for the terminal state
     def addGoal(self, goal, goalVal):
         self.valueMap[goal[0]][goal[1]] = goalVal 
 
+    # Returns the grid and it's dimensions
     def getEnvironmentMap(self):
         return self.map, self.rows, self.cols
 
+    # Prints either the grid or the state values in the grid's format, based on the argument string provided
     def printMap(self, mapToPrint):
         print("====== PRINTING " + mapToPrint + " ======")
         if mapToPrint == "map":
@@ -57,40 +60,25 @@ class Agent:
 
     def __init__ (self, rows, cols, epsilon, goal):
         self.rewards = 0
-        # bottom left
+        # bottom left which is the starting state of the agent
         self.stateX = rows-1
         self.stateY = 0
+        # Grid size agent works within
         self.rows = rows
         self.cols = cols
-        # goal value
+        # Obstacle values to account for when transitioning between states
         self.obstacle = -1
         self.epsilon = epsilon
         self.goal = goal
         self.foundGoal = False
         self.gamma = 1
+        # Setup for the future display of the agent's trajectories
         self.trajectory = ["(" + str(self.stateX) + ", " + str(self.stateY) + ") \t    - Starting State"]
         self.trajectoryMap = np.zeros((rows, cols))
 
+    # Creating the set of actions the agent can take.
     def actionsSet(self):
-        # so the rules are that we cannot move of the edge
-        # after checking this, check to make sure that we are not moving into an obstacle
         actions = []
-        # check if we can go up
-        # if self.stateX != 0 :
-        #     if map[self.stateX-1][self.stateY] != self.obstacle:
-        #         actions.append("N")
-        # check if we can go down
-        # if self.stateX !=self.rows - 1:
-        #     if map[self.stateX + 1][self.stateY] != self.obstacle:
-        #         actions.append("S")
-        # check if we can go left
-        # if self.stateY != 0 :
-        #     if map[self.stateX][self.stateY - 1] != self.obstacle:
-        #         actions.append("W")
-        # check if we can go right
-        # if self.stateY !=self.cols - 1:
-        #     if map[self.stateX][self.stateY + 1] != self.obstacle:
-        #         actions.append("E")
         
         actions.append("N")
         actions.append("S")
@@ -99,6 +87,7 @@ class Agent:
         
         return actions
 
+    # Greedy policy implementation for the evaluation of the best action to execute. Takes into account bumping into obstacles and the boundry of the grid.
     def findOptimal(self, actions, valueMap, map):
         optimalAction = ""
         greatestReward = 0
@@ -162,6 +151,7 @@ class Agent:
         else:
             return optimalAction
 
+    # Decision made whether to exploit or explore. Epsilon values < 0 produces the random agent and epsilon values > 1 produces the greedy agent
     def epsilonGreedy(self, map, valueMap):
         actions = self.actionsSet()
         optimalAction = self.findOptimal(actions, valueMap, map)
@@ -171,8 +161,10 @@ class Agent:
             index = np.random.randint(0, high=len(actions), size=1)[0]
             return self.executeAction(actions[index], map)
         else:
+            # exploit
             return self.executeAction(optimalAction, map)
     
+    # Performs the state transitions for the agent. Agent executes an action, but only transitions state if it can. The agent's trajectory history recording, total reward computation and evaluation if it entered the terminal state also takes place in the function.
     def executeAction(self, action, map):
         if action == "N":
             if self.stateX != 0 and map[self.stateX-1][self.stateY] != self.obstacle:
@@ -189,51 +181,50 @@ class Agent:
         else:
             print("ERROR NEED A VALID ACTION")
         self.rewards -= 1
-        self.trajectory.append("(" + str(self.stateX) + ", " + str(self.stateY) + ") \t    -     " + action)
+        self.trajectory.append("(" + str(self.stateX) + ", " + str(self.stateY) + ") \t    -       " + action)
         self.trajectoryMap[self.stateX][self.stateY] -= 1
-        # print(action)
         if self.stateX == self.goal[0] and self.stateY == self.goal[1]:
             self.rewards += 20
             self.foundGoal = True
 
+    # Prints to the console the trajectory the agent took for the episode.
     def printTrajectory(self):
         print("Destination | Direction Taken")
         for state in self.trajectory:
             print(state)
 
-
+# The creation of the grid world alongside the agents.
 gridWorld = GridWorld(7,7)
-# gridWorld.printMap("valueMap")
 obstacles = np.array(([[2,0],[2,1],[2,2],[2,3],[2,4],[2,5]]))
 gridWorld.addObsticales(obstacles)
 goal = np.array([0,0])
 gridWorld.addGoal(goal, goalVal=20)
-gridWorld.printMap("valueMap")
+# By hand optimal value function values
 optimalValueFunction = np.array([[20, 19, 18, 17, 16, 15, 14], [19, 18, 17, 16, 15, 14, 13], [np.NINF, np.NINF, np.NINF, np.NINF, np.NINF, np.NINF, 12], [5, 6, 7, 8, 9, 10, 11], [4, 5, 6, 7, 8, 9, 10], [3, 4, 5, 6, 7, 8, 9], [2, 3, 4, 5, 6, 7, 8]])
 gridWorld.valueMap = optimalValueFunction
-gridWorld.printMap("valueMap")
 randomAgent = Agent(gridWorld.rows, gridWorld.cols, 2, goal)
 greedyAgent = Agent(gridWorld.rows, gridWorld.cols, -1, goal)
 averagedRandomAgentsReward = 0
 averagedGreedyAgentsReward = 0
 
+# 20 episodes evaluated for each type of agent with a new agents each episode. The cumulative reward across episodes in computed as well.  
 for i in np.arange(20):
     randomAgent = Agent(gridWorld.rows, gridWorld.cols, 2, goal)
     greedyAgent = Agent(gridWorld.rows, gridWorld.cols, -1, goal)
     for i in np.arange(50):
         randomAgent.epsilonGreedy(gridWorld.map, gridWorld.valueMap)
-        # print(randomAgent.rewards)
     while greedyAgent.foundGoal == False:
         greedyAgent.epsilonGreedy(gridWorld.map, gridWorld.valueMap)
     
     averagedRandomAgentsReward += randomAgent.rewards
     averagedGreedyAgentsReward += greedyAgent.rewards
 
+# Cumulative rewards are averaged for 20 episodes.
 averagedRandomAgentsReward /= 20
 averagedGreedyAgentsReward /= 20
 
 
-# Plotting of agents' total reward average over 20 runs
+# Plotting of agents' total reward average over 20 episodes. This bar graph plot code was taken from Stack Overflow and modified to plot the lab's data. The link to the code is in the Readme.
 objects = ('Random', 'Greedy')
 y_pos = np.arange(len(objects))
 performance = [averagedRandomAgentsReward, averagedGreedyAgentsReward]
@@ -260,20 +251,20 @@ for language, (x_position, y_position) in zip(objects, enumerate(performance)):
 # previously data co-ordinates for the x ticklabels
 ax.text(0.5, -0.05, "Agent's Total Reward", ha="center", va="top", transform=ax.transAxes)
 
+plt.show()
 
-
-# Agents' trajectories
+# Agents' trajectories printed to the console with the action they took to transition to the state. This is more detailed than the heat maps below.
 print("====== Random Agent ======")
 randomAgent.printTrajectory()
 print("====== Greedy Agent ======")
 greedyAgent.printTrajectory()
 
-plt.show()
-
+# Agents' trajectories|path taken represented using a heat map plot.
 trajectoryFig = plt.figure()
 trajectoryGrid = trajectoryFig.add_gridspec(1, 2)
 trajectoryPlot = trajectoryGrid.subplots()
 
+# Greatest number of transitions to a state from both agents. Used for normalization of the heat maps' values to better represent each agent's trajectory|path. 
 largestValue = np.amax(np.array([np.amax(np.abs(randomAgent.trajectoryMap)), np.amax(np.abs(greedyAgent.trajectoryMap))]))
 
 trajectoryFig.suptitle("Agent Trajectories")
@@ -281,6 +272,5 @@ trajectoryPlot[0].set_title("Random")
 trajectoryPlot[0].imshow(randomAgent.trajectoryMap, vmin = -largestValue, vmax=0, alpha=0.8, cmap='magma')
 trajectoryPlot[1].set_title("Greedy")
 trajectoryPlot[1].imshow(greedyAgent.trajectoryMap, vmin = -largestValue, vmax=0, alpha=0.8, cmap='magma')
-# plt.imshow(randomAgent.trajectoryMap, alpha=0.8, cmap='YlOrBr_r')
 
 plt.show()
