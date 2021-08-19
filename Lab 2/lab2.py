@@ -1,5 +1,11 @@
 import numpy as np
 from matplotlib import pyplot as plt
+
+# STUDENT NUMBERS
+# 1886648
+# 1851234 
+# 1669326
+
 plt.rcdefaults()
 
 # class of grid world
