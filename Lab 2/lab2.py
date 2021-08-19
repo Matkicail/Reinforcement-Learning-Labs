@@ -63,6 +63,7 @@ class Agent:
         self.foundGoal = False
         self.gamma = 1
         self.trajectory = ["(" + str(self.stateX) + ", " + str(self.stateY) + ") - Starting State"]
+        self.trajectoryMap = np.zeros((rows, cols))
 
     def actionsSet(self):
         # so the rules are that we cannot move of the edge
@@ -183,6 +184,7 @@ class Agent:
             print("ERROR NEED A VALID ACTION")
         self.rewards -= 1
         self.trajectory.append("(" + str(self.stateX) + ", " + str(self.stateY) + ") - " + action)
+        self.trajectoryMap[self.stateX][self.stateY] -= 1
         # print(action)
         if self.stateX == self.goal[0] and self.stateY == self.goal[1]:
             self.rewards += 20
@@ -252,7 +254,7 @@ for language, (x_position, y_position) in zip(objects, enumerate(performance)):
 # previously data co-ordinates for the x ticklabels
 ax.text(0.5, -0.05, "Agent's Total Reward", ha="center", va="top", transform=ax.transAxes)
 
-plt.show()
+
 
 # Agents' trajectories
 print("====== Random Agent ======")
@@ -260,3 +262,19 @@ randomAgent.printTrajectory()
 print("====== Greedy Agent ======")
 greedyAgent.printTrajectory()
 
+plt.show()
+
+trajectoryFig = plt.figure()
+trajectoryGrid = trajectoryFig.add_gridspec(1, 2)
+trajectoryPlot = trajectoryGrid.subplots()
+
+largestValue = np.amax(np.array([np.amax(np.abs(randomAgent.trajectoryMap)), np.amax(np.abs(greedyAgent.trajectoryMap))]))
+
+trajectoryFig.suptitle("Agent Trajectories")
+trajectoryPlot[0].set_title("Random")
+trajectoryPlot[0].imshow(randomAgent.trajectoryMap, vmin = -largestValue, alpha=0.8, cmap='YlOrBr_r')
+trajectoryPlot[1].set_title("Greedy")
+trajectoryPlot[1].imshow(greedyAgent.trajectoryMap, vmin = -largestValue, alpha=0.8, cmap='YlOrBr_r')
+# plt.imshow(randomAgent.trajectoryMap, alpha=0.8, cmap='YlOrBr_r')
+
+plt.show()
