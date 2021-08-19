@@ -64,7 +64,7 @@ class Agent:
         self.gamma = 1
         self.trajectory = ["(" + str(self.stateX) + ", " + str(self.stateY) + ") - Starting State"]
 
-    def actionsSet(self, map):
+    def actionsSet(self):
         # so the rules are that we cannot move of the edge
         # after checking this, check to make sure that we are not moving into an obstacle
         actions = []
@@ -156,7 +156,7 @@ class Agent:
             return optimalAction
 
     def epsilonGreedy(self, map, valueMap):
-        actions = self.actionsSet(map)
+        actions = self.actionsSet()
         optimalAction = self.findOptimal(actions, valueMap, map)
         prob = np.random.uniform(low=0.0, high=1.0, size=1)[0]
         if prob < self.epsilon:
@@ -195,11 +195,12 @@ class Agent:
 
 
 gridWorld = GridWorld(7,7)
-gridWorld.printMap("valueMap")
+# gridWorld.printMap("valueMap")
 obstacles = np.array(([[2,0],[2,1],[2,2],[2,3],[2,4],[2,5]]))
 gridWorld.addObsticales(obstacles)
 goal = np.array([0,0])
 gridWorld.addGoal(goal, goalVal=20)
+gridWorld.printMap("valueMap")
 optimalValueFunction = np.array([[20, 19, 18, 17, 16, 15, 14], [19, 18, 17, 16, 15, 14, 13], [np.NINF, np.NINF, np.NINF, np.NINF, np.NINF, np.NINF, 12], [5, 6, 7, 8, 9, 10, 11], [4, 5, 6, 7, 8, 9, 10], [3, 4, 5, 6, 7, 8, 9], [2, 3, 4, 5, 6, 7, 8]])
 gridWorld.valueMap = optimalValueFunction
 gridWorld.printMap("valueMap")
