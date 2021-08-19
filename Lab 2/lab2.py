@@ -207,12 +207,14 @@ greedyAgent = Agent(gridWorld.rows, gridWorld.cols, -1, goal)
 averagedRandomAgentsReward = 0
 averagedGreedyAgentsReward = 0
 
-# 20 episodes evaluated for each type of agent with a new agents each episode. The cumulative reward across episodes in computed as well.  
+# 20 episodes evaluated for each type of agent with new agents each episode. The cumulative reward across episodes in computed as well.  
 for i in np.arange(20):
     randomAgent = Agent(gridWorld.rows, gridWorld.cols, 2, goal)
     greedyAgent = Agent(gridWorld.rows, gridWorld.cols, -1, goal)
+    # Random agent executes 50 actions.
     for i in np.arange(50):
         randomAgent.epsilonGreedy(gridWorld.map, gridWorld.valueMap)
+    # Greedy agent executes actions until the terminal state is reached.
     while greedyAgent.foundGoal == False:
         greedyAgent.epsilonGreedy(gridWorld.map, gridWorld.valueMap)
     
@@ -224,7 +226,7 @@ averagedRandomAgentsReward /= 20
 averagedGreedyAgentsReward /= 20
 
 
-# Plotting of agents' total reward average over 20 episodes. This bar graph plot code was taken from Stack Overflow and modified to plot the lab's data. The link to the code is in the Readme.
+# Plotting of agents' total reward average over 20 episodes. This bar graph plot code was taken from Stack Overflow and modified to plot the lab's data. The link to the code is in the readMe.
 objects = ('Random', 'Greedy')
 y_pos = np.arange(len(objects))
 performance = [averagedRandomAgentsReward, averagedGreedyAgentsReward]
