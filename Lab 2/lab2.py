@@ -68,7 +68,7 @@ class Agent:
         self.goal = goal
         self.foundGoal = False
         self.gamma = 1
-        self.trajectory = ["(" + str(self.stateX) + ", " + str(self.stateY) + ") - Starting State"]
+        self.trajectory = ["(" + str(self.stateX) + ", " + str(self.stateY) + ") \t    - Starting State"]
         self.trajectoryMap = np.zeros((rows, cols))
 
     def actionsSet(self):
@@ -189,7 +189,7 @@ class Agent:
         else:
             print("ERROR NEED A VALID ACTION")
         self.rewards -= 1
-        self.trajectory.append("(" + str(self.stateX) + ", " + str(self.stateY) + ") - " + action)
+        self.trajectory.append("(" + str(self.stateX) + ", " + str(self.stateY) + ") \t    -     " + action)
         self.trajectoryMap[self.stateX][self.stateY] -= 1
         # print(action)
         if self.stateX == self.goal[0] and self.stateY == self.goal[1]:
@@ -278,9 +278,9 @@ largestValue = np.amax(np.array([np.amax(np.abs(randomAgent.trajectoryMap)), np.
 
 trajectoryFig.suptitle("Agent Trajectories")
 trajectoryPlot[0].set_title("Random")
-trajectoryPlot[0].imshow(randomAgent.trajectoryMap, vmin = -largestValue, alpha=0.8, cmap='YlOrBr_r')
+trajectoryPlot[0].imshow(randomAgent.trajectoryMap, vmin = -largestValue, vmax=0, alpha=0.8, cmap='magma')
 trajectoryPlot[1].set_title("Greedy")
-trajectoryPlot[1].imshow(greedyAgent.trajectoryMap, vmin = -largestValue, alpha=0.8, cmap='YlOrBr_r')
+trajectoryPlot[1].imshow(greedyAgent.trajectoryMap, vmin = -largestValue, vmax=0, alpha=0.8, cmap='magma')
 # plt.imshow(randomAgent.trajectoryMap, alpha=0.8, cmap='YlOrBr_r')
 
 plt.show()
