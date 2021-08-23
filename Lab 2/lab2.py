@@ -205,7 +205,11 @@ gridWorld.valueMap = optimalValueFunction
 randomAgent = Agent(gridWorld.rows, gridWorld.cols, 2, goal)
 greedyAgent = Agent(gridWorld.rows, gridWorld.cols, -1, goal)
 averagedRandomAgentsReward = 0
+stdRandomAgentsReward = 0
 averagedGreedyAgentsReward = 0
+stdGreedyAgentsReward = 0
+listRandomAgentsRewards = np.array([])
+listGreedyAgentsRewards = np.array([])
 
 # 20 episodes evaluated for each type of agent with new agents each episode. The cumulative reward across episodes in computed as well.  
 for i in np.arange(20):
@@ -220,11 +224,14 @@ for i in np.arange(20):
     
     averagedRandomAgentsReward += randomAgent.rewards
     averagedGreedyAgentsReward += greedyAgent.rewards
+    listRandomAgentsRewards = np.append(listRandomAgentsRewards, randomAgent.rewards)
+    listGreedyAgentsRewards = np.append(listGreedyAgentsRewards, greedyAgent.rewards)
 
 # Cumulative rewards are averaged for 20 episodes.
 averagedRandomAgentsReward /= 20
 averagedGreedyAgentsReward /= 20
-
+stdRandomAgentsReward = np.std(listRandomAgentsRewards)
+stdGreedyAgentsReward = np.std(listGreedyAgentsRewards)
 
 # Plotting of agents' total reward average over 20 episodes. This bar graph plot code was taken from Stack Overflow and modified to plot the lab's data. The link to the code is in the readMe.
 objects = ('Random', 'Greedy')
@@ -252,6 +259,37 @@ for language, (x_position, y_position) in zip(objects, enumerate(performance)):
 # Placing the x-axis label, note the transformation into `Axes` co-ordinates
 # previously data co-ordinates for the x ticklabels
 ax.text(0.5, -0.05, "Agent's Total Reward", ha="center", va="top", transform=ax.transAxes)
+ax.set_title("Mean Return Over 20 Runs")
+
+plt.show()
+
+# Plotting of agents' standard deviation over 20 episodes. This bar graph plot code was taken from Stack Overflow and modified to plot the lab's data. The link to the code is in the readMe.
+objects = ('Random', 'Greedy')
+y_pos = np.arange(len(objects))
+performance = [stdRandomAgentsReward, stdGreedyAgentsReward]
+
+plt.bar(y_pos, performance, align='center', alpha=0.5)
+# Get the axes object
+ax = plt.gca()
+# remove the existing ticklabels
+ax.set_xticklabels([])
+# remove the extra tick on the negative bar
+ax.set_xticks([idx for (idx, x) in enumerate(performance) if x > 0])
+ax.spines["bottom"].set_position(("data", 0))
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+# placing each of the x-axis labels individually
+label_offset = 0.5
+for language, (x_position, y_position) in zip(objects, enumerate(performance)):
+    if y_position > 0:
+        label_y = -label_offset
+    else:
+        label_y = y_position - label_offset
+    ax.text(x_position, label_y, language, ha="center", va="top")
+# Placing the x-axis label, note the transformation into `Axes` co-ordinates
+# previously data co-ordinates for the x ticklabels
+ax.text(0.5, -0.05, "Agent's Standard Deviation", ha="center", va="top", transform=ax.transAxes)
+ax.set_title("Standard Deviation Over 20 Runs")
 
 plt.show()
 
