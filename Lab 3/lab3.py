@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+import seaborn as sns
 
 # STUDENT NUMBERS
 # 1886648
@@ -193,23 +194,81 @@ class Agent:
         for state in self.trajectory:
             print(state)
             
-def BellmanEq(actions,gridMap,valueMap):
-    return 0
+            
+def getNextStates(gridMap,i,j):
+    
+    n = gridMap.shape[0]
+    next = []
+    
+    acts = ((i-1,j),(i+1,j),(i,j+1),(i,j-1))
+    
+    for k in range(0,4):
+        a = acts[k]
+        if a[0] >= n or a[0] < 0 or a[1] >= n or a[1] < 0:
+            next.append((i,j))
+        else:
+            next.append(a)
+    
+    return next
+
+def getRewards(rewards,states):
+    re = []
+    
+    for i in range(0,len(states)):
+        s = states[i]
+        re.append(rewards[s[0],s[1]])
+        
+    return re
+
+def getValue(V,states):
+    val = []
+
+    for i in range(0,len(states)):
+        s = states[i]
+        val.append(V[s[0],s[1]])
+        
+    
+    return val
+# def BellmanEq(actions,gridMap,V,reward,discount,i,j):
+    
+#     pi = 0.25
+#     next_s = getNextStates(gridMap,i,j)
+    
+    
+#     V[i,j] = pi*(rew_s + discount * V(next_s))
+#     return 0
     
 
-def policyEvaluation(actions,gridWorld,theta):
+def policyEvaluation(gridWorld,rewards,theta,discount):
     gridMap , row , col = gridWorld.getEnvironmentMap()
-    V = np.zeros((rows,cols))
+    V = np.zeros((row,col))
+    t = 0
     
     while True:
         delta = 0
-        
+        print(t)
+        t += 1
         for i in range(0,row):
             for j in range(0,col):
-                val =  V
-                V = BellmanEq(actions,gridMap,gridWorld.valueMap)
-                vDiff = abs(val-V)
-                delta = np.max(delta,vDiff)
+                # print(i, "\n" ,j)
+                val =  V[i,j]
+            
+                pi = 0.25
+                next_s = getNextStates(gridMap,i,j)
+                rew_s = getRewards(rewards,next_s)
+               
+                # print("next s  \n", next_s)
+                # print("reward\n", rew_s)
+                # print("v" , getValue(V,next_s))
+                # print(np.multiply(,getValue(V,next_s)))
+                # print(np.sum(pi*(rew_s + np.multiply(discount,getValue(V,next_s)))))
+                
+                V[i,j] = np.sum(pi*(rew_s + np.multiply(discount,getValue(V,next_s))))
+                
+                vDiff = abs(val-V[i,j])
+                # print(vDiff)
+                # print(delta)
+                delta = max(delta,vDiff)
       
         if delta < theta:
             break;
@@ -218,122 +277,136 @@ def policyEvaluation(actions,gridWorld,theta):
 
 # The creation of the grid world alongside the agents.
 gridWorld = GridWorld(7,7)
-obstacles = np.array(([[2,0],[2,1],[2,2],[2,3],[2,4],[2,5]]))
-gridWorld.addObsticales(obstacles)
 goal = np.array([0,0])
-gridWorld.addGoal(goal, goalVal=20)
-# By hand optimal value function values
-optimalValueFunction = np.array([[20, 19, 18, 17, 16, 15, 14], [19, 18, 17, 16, 15, 14, 13], [np.NINF, np.NINF, np.NINF, np.NINF, np.NINF, np.NINF, 12], [5, 6, 7, 8, 9, 10, 11], [4, 5, 6, 7, 8, 9, 10], [3, 4, 5, 6, 7, 8, 9], [2, 3, 4, 5, 6, 7, 8]])
-gridWorld.valueMap = optimalValueFunction
-randomAgent = Agent(gridWorld.rows, gridWorld.cols, 2, goal)
-greedyAgent = Agent(gridWorld.rows, gridWorld.cols, -1, goal)
-averagedRandomAgentsReward = 0
-stdRandomAgentsReward = 0
-averagedGreedyAgentsReward = 0
-stdGreedyAgentsReward = 0
-listRandomAgentsRewards = np.array([])
-listGreedyAgentsRewards = np.array([])
 
-# 20 episodes evaluated for each type of agent with new agents each episode. The cumulative reward across episodes in computed as well.  
-for i in np.arange(20):
-    randomAgent = Agent(gridWorld.rows, gridWorld.cols, 2, goal)
-    greedyAgent = Agent(gridWorld.rows, gridWorld.cols, -1, goal)
-    # Random agent executes 50 actions.
-    for i in np.arange(50):
-        randomAgent.epsilonGreedy(gridWorld.map, gridWorld.valueMap)
-    # Greedy agent executes actions until the terminal state is reached.
-    while greedyAgent.foundGoal == False:
-        greedyAgent.epsilonGreedy(gridWorld.map, gridWorld.valueMap)
+rewards = np.ones((7,7))*-1
+rewards[0,0] = 20
+print(rewards)
+
+theta = 0.01
+discount = 0.5
+
+matrix = policyEvaluation(gridWorld,rewards,theta,discount)
+print(matrix)
+sns.heatmap(matrix)
     
-    averagedRandomAgentsReward += randomAgent.rewards
-    averagedGreedyAgentsReward += greedyAgent.rewards
-    listRandomAgentsRewards = np.append(listRandomAgentsRewards, randomAgent.rewards)
-    listGreedyAgentsRewards = np.append(listGreedyAgentsRewards, greedyAgent.rewards)
 
-# Cumulative rewards are averaged for 20 episodes.
-averagedRandomAgentsReward /= 20
-averagedGreedyAgentsReward /= 20
-stdRandomAgentsReward = np.std(listRandomAgentsRewards)
-stdGreedyAgentsReward = np.std(listGreedyAgentsRewards)
 
-# Plotting of agents' total reward average over 20 episodes. This bar graph plot code was taken from Stack Overflow and modified to plot the lab's data. The link to the code is in the readMe.
-objects = ('Random', 'Greedy')
-y_pos = np.arange(len(objects))
-performance = [averagedRandomAgentsReward, averagedGreedyAgentsReward]
 
-plt.bar(y_pos, performance, align='center', alpha=0.5)
-# Get the axes object
-ax = plt.gca()
-# remove the existing ticklabels
-ax.set_xticklabels([])
-# remove the extra tick on the negative bar
-ax.set_xticks([idx for (idx, x) in enumerate(performance) if x > 0])
-ax.spines["bottom"].set_position(("data", 0))
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-# placing each of the x-axis labels individually
-label_offset = 0.5
-for language, (x_position, y_position) in zip(objects, enumerate(performance)):
-    if y_position > 0:
-        label_y = -label_offset
-    else:
-        label_y = y_position - label_offset
-    ax.text(x_position, label_y, language, ha="center", va="top")
-# Placing the x-axis label, note the transformation into `Axes` co-ordinates
-# previously data co-ordinates for the x ticklabels
-ax.text(0.5, -0.05, "Agent's Total Reward", ha="center", va="top", transform=ax.transAxes)
-ax.set_title("Mean Return Over 20 Runs")
+#obstacles = np.array(([[2,0],[2,1],[2,2],[2,3],[2,4],[2,5]]))
+#gridWorld.addObsticales(obstacles)
+# By hand optimal value function values
+# optimalValueFunction = np.array([[20, 19, 18, 17, 16, 15, 14], [19, 18, 17, 16, 15, 14, 13], [np.NINF, np.NINF, np.NINF, np.NINF, np.NINF, np.NINF, 12], [5, 6, 7, 8, 9, 10, 11], [4, 5, 6, 7, 8, 9, 10], [3, 4, 5, 6, 7, 8, 9], [2, 3, 4, 5, 6, 7, 8]])
+# gridWorld.valueMap = optimalValueFunction
+# randomAgent = Agent(gridWorld.rows, gridWorld.cols, 2, goal)
+# greedyAgent = Agent(gridWorld.rows, gridWorld.cols, -1, goal)
+# averagedRandomAgentsReward = 0
+# stdRandomAgentsReward = 0
+# averagedGreedyAgentsReward = 0
+# stdGreedyAgentsReward = 0
+# listRandomAgentsRewards = np.array([])
+# listGreedyAgentsRewards = np.array([])
 
-plt.show()
+# # 20 episodes evaluated for each type of agent with new agents each episode. The cumulative reward across episodes in computed as well.  
+# for i in np.arange(20):
+#     randomAgent = Agent(gridWorld.rows, gridWorld.cols, 2, goal)
+#     greedyAgent = Agent(gridWorld.rows, gridWorld.cols, -1, goal)
+#     # Random agent executes 50 actions.
+#     for i in np.arange(50):
+#         randomAgent.epsilonGreedy(gridWorld.map, gridWorld.valueMap)
+#     # Greedy agent executes actions until the terminal state is reached.
+#     while greedyAgent.foundGoal == False:
+#         greedyAgent.epsilonGreedy(gridWorld.map, gridWorld.valueMap)
+    
+#     averagedRandomAgentsReward += randomAgent.rewards
+#     averagedGreedyAgentsReward += greedyAgent.rewards
+#     listRandomAgentsRewards = np.append(listRandomAgentsRewards, randomAgent.rewards)
+#     listGreedyAgentsRewards = np.append(listGreedyAgentsRewards, greedyAgent.rewards)
 
-# Plotting of agents' standard deviation over 20 episodes. This bar graph plot code was taken from Stack Overflow and modified to plot the lab's data. The link to the code is in the readMe.
-objects = ('Random', 'Greedy')
-y_pos = np.arange(len(objects))
-performance = [stdRandomAgentsReward, stdGreedyAgentsReward]
+# # Cumulative rewards are averaged for 20 episodes.
+# averagedRandomAgentsReward /= 20
+# averagedGreedyAgentsReward /= 20
+# stdRandomAgentsReward = np.std(listRandomAgentsRewards)
+# stdGreedyAgentsReward = np.std(listGreedyAgentsRewards)
 
-plt.bar(y_pos, performance, align='center', alpha=0.5)
-# Get the axes object
-ax = plt.gca()
-# remove the existing ticklabels
-ax.set_xticklabels([])
-# remove the extra tick on the negative bar
-ax.set_xticks([idx for (idx, x) in enumerate(performance) if x > 0])
-ax.spines["bottom"].set_position(("data", 0))
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-# placing each of the x-axis labels individually
-label_offset = 0.5
-for language, (x_position, y_position) in zip(objects, enumerate(performance)):
-    if y_position > 0:
-        label_y = -label_offset
-    else:
-        label_y = y_position - label_offset
-    ax.text(x_position, label_y, language, ha="center", va="top")
-# Placing the x-axis label, note the transformation into `Axes` co-ordinates
-# previously data co-ordinates for the x ticklabels
-ax.text(0.5, -0.05, "Agent's Standard Deviation", ha="center", va="top", transform=ax.transAxes)
-ax.set_title("Standard Deviation Over 20 Runs")
+# # Plotting of agents' total reward average over 20 episodes. This bar graph plot code was taken from Stack Overflow and modified to plot the lab's data. The link to the code is in the readMe.
+# objects = ('Random', 'Greedy')
+# y_pos = np.arange(len(objects))
+# performance = [averagedRandomAgentsReward, averagedGreedyAgentsReward]
 
-plt.show()
+# plt.bar(y_pos, performance, align='center', alpha=0.5)
+# # Get the axes object
+# ax = plt.gca()
+# # remove the existing ticklabels
+# ax.set_xticklabels([])
+# # remove the extra tick on the negative bar
+# ax.set_xticks([idx for (idx, x) in enumerate(performance) if x > 0])
+# ax.spines["bottom"].set_position(("data", 0))
+# ax.spines["top"].set_visible(False)
+# ax.spines["right"].set_visible(False)
+# # placing each of the x-axis labels individually
+# label_offset = 0.5
+# for language, (x_position, y_position) in zip(objects, enumerate(performance)):
+#     if y_position > 0:
+#         label_y = -label_offset
+#     else:
+#         label_y = y_position - label_offset
+#     ax.text(x_position, label_y, language, ha="center", va="top")
+# # Placing the x-axis label, note the transformation into `Axes` co-ordinates
+# # previously data co-ordinates for the x ticklabels
+# ax.text(0.5, -0.05, "Agent's Total Reward", ha="center", va="top", transform=ax.transAxes)
+# ax.set_title("Mean Return Over 20 Runs")
 
-# Agents' trajectories printed to the console with the action they took to transition to the state. This is more detailed than the heat maps below.
-print("====== Random Agent ======")
-randomAgent.printTrajectory()
-print("====== Greedy Agent ======")
-greedyAgent.printTrajectory()
+# plt.show()
 
-# Agents' trajectories|path taken represented using a heat map plot.
-trajectoryFig = plt.figure()
-trajectoryGrid = trajectoryFig.add_gridspec(1, 2)
-trajectoryPlot = trajectoryGrid.subplots()
+# # Plotting of agents' standard deviation over 20 episodes. This bar graph plot code was taken from Stack Overflow and modified to plot the lab's data. The link to the code is in the readMe.
+# objects = ('Random', 'Greedy')
+# y_pos = np.arange(len(objects))
+# performance = [stdRandomAgentsReward, stdGreedyAgentsReward]
 
-# Greatest number of transitions to a state from both agents. Used for normalization of the heat maps' values to better represent each agent's trajectory|path. 
-largestValue = np.amax(np.array([np.amax(np.abs(randomAgent.trajectoryMap)), np.amax(np.abs(greedyAgent.trajectoryMap))]))
+# plt.bar(y_pos, performance, align='center', alpha=0.5)
+# # Get the axes object
+# ax = plt.gca()
+# # remove the existing ticklabels
+# ax.set_xticklabels([])
+# # remove the extra tick on the negative bar
+# ax.set_xticks([idx for (idx, x) in enumerate(performance) if x > 0])
+# ax.spines["bottom"].set_position(("data", 0))
+# ax.spines["top"].set_visible(False)
+# ax.spines["right"].set_visible(False)
+# # placing each of the x-axis labels individually
+# label_offset = 0.5
+# for language, (x_position, y_position) in zip(objects, enumerate(performance)):
+#     if y_position > 0:
+#         label_y = -label_offset
+#     else:
+#         label_y = y_position - label_offset
+#     ax.text(x_position, label_y, language, ha="center", va="top")
+# # Placing the x-axis label, note the transformation into `Axes` co-ordinates
+# # previously data co-ordinates for the x ticklabels
+# ax.text(0.5, -0.05, "Agent's Standard Deviation", ha="center", va="top", transform=ax.transAxes)
+# ax.set_title("Standard Deviation Over 20 Runs")
 
-trajectoryFig.suptitle("Agent Trajectories")
-trajectoryPlot[0].set_title("Random")
-trajectoryPlot[0].imshow(randomAgent.trajectoryMap, vmin = -largestValue, vmax=0, alpha=0.8, cmap='magma')
-trajectoryPlot[1].set_title("Greedy")
-trajectoryPlot[1].imshow(greedyAgent.trajectoryMap, vmin = -largestValue, vmax=0, alpha=0.8, cmap='magma')
+# plt.show()
 
-plt.show()
+# # Agents' trajectories printed to the console with the action they took to transition to the state. This is more detailed than the heat maps below.
+# print("====== Random Agent ======")
+# randomAgent.printTrajectory()
+# print("====== Greedy Agent ======")
+# greedyAgent.printTrajectory()
+
+# # Agents' trajectories|path taken represented using a heat map plot.
+# trajectoryFig = plt.figure()
+# trajectoryGrid = trajectoryFig.add_gridspec(1, 2)
+# trajectoryPlot = trajectoryGrid.subplots()
+
+# # Greatest number of transitions to a state from both agents. Used for normalization of the heat maps' values to better represent each agent's trajectory|path. 
+# largestValue = np.amax(np.array([np.amax(np.abs(randomAgent.trajectoryMap)), np.amax(np.abs(greedyAgent.trajectoryMap))]))
+
+# trajectoryFig.suptitle("Agent Trajectories")
+# trajectoryPlot[0].set_title("Random")
+# trajectoryPlot[0].imshow(randomAgent.trajectoryMap, vmin = -largestValue, vmax=0, alpha=0.8, cmap='magma')
+# trajectoryPlot[1].set_title("Greedy")
+# trajectoryPlot[1].imshow(greedyAgent.trajectoryMap, vmin = -largestValue, vmax=0, alpha=0.8, cmap='magma')
+
+# plt.show()
