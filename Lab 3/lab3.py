@@ -246,7 +246,7 @@ def policyEvaluation(gridWorld,rewards,theta,discount):
     
     while True:
         delta = 0
-        print(t)
+        #print(t)
         t += 1
         for i in range(0,row):
             for j in range(0,col):
@@ -273,7 +273,7 @@ def policyEvaluation(gridWorld,rewards,theta,discount):
         if delta < theta:
             break;
     
-    return V
+    return V,t
 
 # The creation of the grid world alongside the agents.
 gridWorld = GridWorld(7,7)
@@ -286,9 +286,16 @@ print(rewards)
 theta = 0.01
 discount = 0.5
 
-matrix = policyEvaluation(gridWorld,rewards,theta,discount)
+matrix,t = policyEvaluation(gridWorld,rewards,theta,discount)
 print(matrix)
 sns.heatmap(matrix)
+
+discounts = np.logspace(- 0.2, 0, num=20)
+for d in discounts:
+    matrix,t = policyEvaluation(gridWorld,rewards,theta,d)
+    print(d)
+    print(matrix)
+    print(t)
     
 
 
