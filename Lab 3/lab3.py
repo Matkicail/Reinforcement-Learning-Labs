@@ -106,19 +106,20 @@ def policyEvaluation(gridWorld,rewards,theta,discount):
     return V,t
 
 # The creation of the grid world alongside the agents.
-gridWorld = GridWorld(7,7)
+gridWorld = GridWorld(4,4)
 goal = np.array([0,0])
 
-rewards = np.ones((7,7))*-1
+rewards = np.ones((4,4))*-1
 rewards[0,0] = 20
 print(rewards)
 
 theta = 0.01
-discount = 0.5
+discount = 1
 
 matrix,t = policyEvaluation(gridWorld,rewards,theta,discount)
-#print(matrix)
-#sns.heatmap(matrix)
+print(matrix)
+sns.heatmap(matrix)
+plt.show()
 
 iterDF = pd.DataFrame(columns= ["discount", "iterations"])
 
