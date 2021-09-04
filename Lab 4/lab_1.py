@@ -50,6 +50,12 @@ def valueOfState(s, action, rewards):
         else:
             return rewards[s-1]
 
+def createRandomPolicy(rows, cols, numActions):
+    space = np.zeros((rows*cols, numActions))
+    for i in range(cols * rows):
+        for j in range(numActions):
+            space[i,j] = 1/numActions
+    return space
     
 def policy_evaluation(env, policy, discount_factor=1.0, theta=0.00001):
     """
@@ -148,6 +154,7 @@ def policy_iteration(env, policy_evaluation_fn=policy_evaluation, discount_facto
 
     return policy, values
 
+    # did not use this function as I made my own
     def one_step_lookahead(state, V):
         """
         Helper function to calculate the value for all action in a given state.
@@ -160,8 +167,6 @@ def policy_iteration(env, policy_evaluation_fn=policy_evaluation, discount_facto
             A vector of length env.action_space.n containing the expected value of each action.
         """
         raise NotImplementedError
-
-    raise NotImplementedError
 
 
 def value_iteration(env, theta=0.0001, discount_factor=1.0):
@@ -180,7 +185,31 @@ def value_iteration(env, theta=0.0001, discount_factor=1.0):
     Returns:
         A tuple (policy, V) of the optimal policy and the optimal value function.
     """
-
+    values = np.random.randint(low = - 11, high = 0, size = 25)
+    policy = createRandomPolicy(5, 5, 4)
+    actions = []
+    for a in range(env.action_space.n):
+        actions.append(a)
+    cont = True
+    while cont:
+        delta = 0
+        for s in range(25):
+            # terminal state must stay 0
+            if s == 24:
+                values[s] = 0
+            else:
+                v = values[s]
+                tempArr = []
+                for a in actions:
+                    tempArr.append(-1 + discount_factor * valueOfState(s, a, values))
+                values[s] = max(tempArr)
+                env.P
+                policy[s,:] = [0, 0, 0, 0]
+                policy[s][argmax(tempArr)] = 1
+                delta = max(delta, abs(v - values[s]))
+        if delta > theta:
+            cont = False
+    return policy, values
     def one_step_lookahead(state, V):
         """
         Helper function to calculate the value for all action in a given state.
@@ -195,13 +224,6 @@ def value_iteration(env, theta=0.0001, discount_factor=1.0):
         raise NotImplementedError
 
     raise NotImplementedError
-
-def createRandomPolicy(rows, cols, numActions):
-    space = np.zeros((rows*cols, numActions))
-    for i in range(cols * rows):
-        for j in range(numActions):
-            space[i,j] = 1/numActions
-    return space
 
 def printWorldMoves(world):
     for i in range(5):
@@ -251,6 +273,27 @@ def printStateValues(values):
         print(temp)
     return
 
+def printDirs(policy):
+    for i in range(5):
+        temp = ""
+        for j in range(5):
+            if i*5 + j < 24:
+                dir = argmax(policy[i*5+j,:])
+                if dir == 0:
+                    temp += "U"
+                elif dir == 1:
+                    temp += "R"
+                elif dir == 2:
+                    temp += "D"
+                else:
+                    temp += "L"
+            else:
+                temp += "T"
+            if j < 4:
+                temp += " "
+        print(temp)
+    return
+
 def main():
     # Create Gridworld environment with size of 5 by 5, with the goal at state 24. Reward for getting to goal state is 0, and each step reward is -1
     env = GridworldEnv(shape=[5, 5], terminal_states=[
@@ -289,9 +332,13 @@ def main():
     policy, v = policy_iteration(env, policy_evaluation_fn=policy_evaluation, discount_factor=1.0)
     
     # TODO Print out best action for each state in grid shape
-
+    print("POLICY DIRECTIONS ARE AS FOLLOWS \n ############################")
+    printDirs(policy)
+    print("##########################")
     # TODO: print state value for each state, as grid shape
-
+    print("VALUES ARE AS FOLLOWS \n ############################")
+    printStateValues(v)
+    print("##########################")
     # Test: Make sure the value function is what we expected
     expected_v = np.array([-8., -7., -6., -5., -4.,
                            -7., -6., -5., -4., -3.,
@@ -303,11 +350,15 @@ def main():
     print("*" * 5 + " Value iteration " + "*" * 5)
     print("")
     # TODO: use  value iteration to compute optimal policy and state values
-    policy, v = [], []  # call value_iteration
+    policy, v = value_iteration(env, theta=0.0001, discount_factor=1.0)
 
-    # TODO Print out best action for each state in grid shape
-
+    print("POLICY DIRECTIONS ARE AS FOLLOWS \n ############################")
+    printDirs(policy)
+    print("##########################")
     # TODO: print state value for each state, as grid shape
+    print("VALUES ARE AS FOLLOWS \n ############################")
+    printStateValues(v)
+    print("##########################")
 
     # Test: Make sure the value function is what we expected
     expected_v = np.array([-8., -7., -6., -5., -4.,
