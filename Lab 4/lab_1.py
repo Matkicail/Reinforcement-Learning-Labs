@@ -7,6 +7,7 @@
 ###
 
 import numpy as np
+from numpy.core.fromnumeric import argmax
 from environments.gridworld import GridworldEnv
 import timeit
 import matplotlib.pyplot as plt
@@ -16,24 +17,36 @@ def valueOfState(s, action, rewards):
     """
     Given some state see what the neighbours are.
     """
+    # go up
     if action == 0:
+        # falls off top
         if s < 5:
             return rewards[s]
+        # state above
         else:
             return rewards[s-5]
-    if action == 2:
-        if s > 19:
-            return rewards[s]
-        else:
-            return rewards[s+5]
+    # go right
     if action == 1:
-        if (s) % 4 == 0:
+        # falls off rightside
+        if s % 5 == 4:
             return rewards[s]
+        # state to right
         else:
             return rewards[s+1]
+    # go down
+    if action == 2:
+        # falls off bottom
+        if s > 19:
+            return rewards[s]
+        # state below
+        else:
+            return rewards[s+5]
+    # go left
     if action == 3:
+        # falls off left side
         if s % 5 == 0:
             return rewards[s]
+        # state to the left
         else:
             return rewards[s-1]
 
@@ -62,19 +75,19 @@ def policy_evaluation(env, policy, discount_factor=1.0, theta=0.00001):
         values.append(0)
     # set the error to 10 initally just so that we can get the loop to execute the first time as 0 < theta always true for non-zero positive theta 
     delta = 10
-    pi = 0.25
     actions = [0, 1, 2, 3]
     while(delta > theta):
         delta = 0
-        for s in range(24):
+        for s in range(25):
             v = values[s]
             temp = 0
-            for a in actions:
-                temp += policy[s][a] * ( -1 + valueOfState(s, a, values) )
+            if s != 24:
+                for a in actions:
+                    temp += policy[s][a] * ( -1 + valueOfState(s, a, values) )
             values[s] = temp
             delta = max(delta, abs(v - values[s]))
             
-        print(delta)
+        # print(delta)
     return values 
      
 def policy_iteration(env, policy_evaluation_fn=policy_evaluation, discount_factor=1.0):
@@ -94,6 +107,46 @@ def policy_iteration(env, policy_evaluation_fn=policy_evaluation, discount_facto
         V is the value function for the optimal policy.
 
     """
+    # randomly creating first set of values
+    values = np.random.randint(low = - 11, high = 0, size = 25)
+    policy = createRandomPolicy(5, 5, 4)
+    theta = 0.00001
+    cont = True
+    while cont:
+
+        # set the error to 10 initally just so that we can get the loop to execute the first time as 0 < theta always true for non-zero positive theta 
+        # Policy Evaluation
+        delta = 10
+        actions = [0, 1, 2, 3]
+        while(delta > theta):
+            delta = 0
+            for s in range(25):
+                v = values[s]
+                temp = 0
+                if s != 24:
+                    for a in actions:
+                        temp += policy[s][a] * ( -1 + valueOfState(s, a, values) )
+                values[s] = temp
+                delta = max(delta, abs(v - values[s]))
+        
+        # Policy Improvement 
+        stable = True
+        for s in range(25):
+            # find the old action that had the greatest probability
+            oldAction = argmax(policy[s,:])
+            tempVals = []
+            for a in range(4):
+                tempVals.append( -1 + valueOfState(s, a, values))
+            # get the best action
+            bestAct = argmax(tempVals)
+            policy[s,:] = [0,0,0,0]
+            policy[s,bestAct] = 1
+            if oldAction != bestAct:
+                stable = False
+        if stable == True:
+            cont = False
+
+    return policy, values
 
     def one_step_lookahead(state, V):
         """
@@ -187,17 +240,28 @@ def printRandomWorldMoves(env):
         printWorldMoves(world)
     world[obs[0]] = "X"
     return 
+
+def printStateValues(values):
+    for i in range(5):
+        temp = ""
+        for j in range(5):
+            temp += str(values[i*5 + j])
+            if j < 4:
+                temp += " "
+        print(temp)
+    return
+
 def main():
     # Create Gridworld environment with size of 5 by 5, with the goal at state 24. Reward for getting to goal state is 0, and each step reward is -1
     env = GridworldEnv(shape=[5, 5], terminal_states=[
                        24], terminal_reward=0, step_reward=-1)
-    
     state = env.reset()
     print("")
     env.render()
     print("")
 
     # TODO: generate random policy
+    # the below matrix would be a # [5x5, 4] shaped matrix
     randomPolicy = createRandomPolicy(rows=5, cols=5, numActions=4)
     printRandomWorldMoves(env)
     print("*" * 5 + " Policy evaluation " + "*" * 5)
@@ -208,6 +272,8 @@ def main():
     v = policy_evaluation(env, policy, discount_factor=1.0, theta=0.00001)
 
     # TODO: print state value for each state, as grid shape
+    printStateValues(v)
+
 
     # Test: Make sure the evaluated policy is what we expected
     expected_v = np.array([-106.81, -104.81, -101.37, -97.62, -95.07,
@@ -220,8 +286,8 @@ def main():
     print("*" * 5 + " Policy iteration " + "*" * 5)
     print("")
     # TODO: use  policy improvement to compute optimal policy and state values
-    policy, v = [], []  # call policy_iteration
-
+    policy, v = policy_iteration(env, policy_evaluation_fn=policy_evaluation, discount_factor=1.0)
+    
     # TODO Print out best action for each state in grid shape
 
     # TODO: print state value for each state, as grid shape
