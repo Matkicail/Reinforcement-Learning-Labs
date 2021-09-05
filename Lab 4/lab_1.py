@@ -2,7 +2,7 @@
 # Group Members
 # Matthew: 1669326
 # Mikayla: 1886648
-# Michale-John: 1851234 
+# Michael-John: 1851234 
 ###
 
 import numpy as np
