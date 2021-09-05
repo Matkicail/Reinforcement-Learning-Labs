@@ -408,10 +408,10 @@ def main():
     for discount in discounts:
         discountInfo.append( str(round(discount,2)))
 
-    plt.bar(discountInfo, policyTimes*1000, label="Policy Iteration")
-    plt.bar(discountInfo, valueTimes*1000, label="Value Iteration")
+    plt.bar(discountInfo, policyTimes, label="Policy Iteration")
+    plt.bar(discountInfo, valueTimes, label="Value Iteration")
     plt.title("Comparison of Average Running Times Iteration Approaches")
-    plt.ylabel("Run time (ms)")
+    plt.ylabel("Run time (seconds)")
     plt.xlabel("Discount Value")
     plt.legend()
     plt.tight_layout()
