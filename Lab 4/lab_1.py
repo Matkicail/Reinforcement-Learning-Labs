@@ -9,7 +9,7 @@
 import numpy as np
 from numpy.core.fromnumeric import argmax
 from environments.gridworld import GridworldEnv
-import timeit
+import time
 import matplotlib.pyplot as plt
 
 
@@ -197,6 +197,7 @@ def value_iteration(env, theta=0.0001, discount_factor=1.0):
             # terminal state must stay 0
             if s == 24:
                 values[s] = 0
+            # update the non-terminal states
             else:
                 v = values[s]
                 tempArr = []
@@ -207,7 +208,7 @@ def value_iteration(env, theta=0.0001, discount_factor=1.0):
                 policy[s,:] = [0, 0, 0, 0]
                 policy[s][argmax(tempArr)] = 1
                 delta = max(delta, abs(v - values[s]))
-        if delta > theta:
+        if delta < theta:
             cont = False
     return policy, values
     def one_step_lookahead(state, V):
@@ -368,6 +369,53 @@ def main():
                            -4., -3., -2., -1., 0.])
     np.testing.assert_array_almost_equal(v, expected_v, decimal=1)
 
+    # Mikayla
+    # TODO
+    # The function value iteration is the part that was meant to be done, but I finished off the entire lab just to do it all
+    # The final requirement is just to plot the average running time for policy iteration and value iteration 
+    # by varying the discount rate.
+    # So these functions just need to take in a specific discount rate and then record the runtime in seconds/milliseconds.
+    
+    discounts = np.logspace(-0.2, 0, num=30)
+    policyTimes = np.array(())
+    for discount in discounts:
+        policy = createRandomPolicy(5,5,4)
+        timeIter = 0
+        
+        for i in range(10):
+            start = time.time()
+            policy_iteration(env, policy_evaluation_fn=policy_evaluation, discount_factor=discount)
+            timeIter += time.time() - start
+        timeIter /= 10
+        policyTimes = np.append(policyTimes, timeIter)
+        print("Policy Iteration: \t Discount factor: {0}, time taken: {1}".format(discount, timeIter))
+    
+    print("\n ################################################################ \n")
+
+    valueTimes = np.array(())
+    for discount in discounts:
+        timeIter = 0
+        
+        for i in range(10):
+            start = time.time()
+            value_iteration(env, theta=0.0001, discount_factor=discount)
+            timeIter += time.time() - start
+        timeIter /= 10
+        valueTimes = np.append(valueTimes, timeIter)
+        print("Value Iteration: \t Discount factor: {0}, time taken: {1}".format(discount, timeIter))
+
+    discountInfo = []
+    for discount in discounts:
+        discountInfo.append( str(round(discount,2)))
+
+    plt.bar(discountInfo, policyTimes*1000, label="Policy Iteration")
+    plt.bar(discountInfo, valueTimes*1000, label="Value Iteration")
+    plt.title("Comparison of Average Running Times Iteration Approaches")
+    plt.ylabel("Run time (ms)")
+    plt.xlabel("Discount Value")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     main()
