@@ -1,9 +1,8 @@
 ###
 # Group Members
-# Name:Student Number
-# Name:Student Number
-# Name:Student Number
-# Name:Student Number
+# Matthew: 1669326
+# Mikayla: 1886648
+# Michale-John: 1851234 
 ###
 
 import numpy as np
@@ -368,13 +367,6 @@ def main():
                            -5., -4., -3., -2., -1.,
                            -4., -3., -2., -1., 0.])
     np.testing.assert_array_almost_equal(v, expected_v, decimal=1)
-
-    # Mikayla
-    # TODO
-    # The function value iteration is the part that was meant to be done, but I finished off the entire lab just to do it all
-    # The final requirement is just to plot the average running time for policy iteration and value iteration 
-    # by varying the discount rate.
-    # So these functions just need to take in a specific discount rate and then record the runtime in seconds/milliseconds.
     
     discounts = np.logspace(-0.2, 0, num=30)
     policyTimes = np.array(())
