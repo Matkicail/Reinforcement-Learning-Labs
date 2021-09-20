@@ -31,10 +31,6 @@ def blackjack_plot_value_function(V, title="Value Function", suptitle="MC Blackj
     max_x = max(k[0] for k in V.keys())
     min_y = min(k[1] for k in V.keys())
     max_y = max(k[1] for k in V.keys())
-    print(min_x)
-    print(max_x)
-    print(min_y)
-    print(max_y)
 
     x_range = np.arange(min_x, max_x + 1)
     y_range = np.arange(min_y, max_y + 1)
@@ -218,13 +214,13 @@ def mc_prediction(policy, env, num_episodes, discount_factor=1.0, max_steps_per_
                 temp_V = V[(next_observation)]
                 V[(next_observation)] = temp_V + 1/N[(next_observation)]*(G - temp_V)
                 
-                
             if done == True:
                 break;
                 
     
     # print(V)
-    # print(V[([0], [1], False)])   
+    # print(V[([0], [1], False)])  
+    
     return V
     
     
@@ -232,8 +228,9 @@ def mc_prediction(policy, env, num_episodes, discount_factor=1.0, max_steps_per_
 
 def argmax(numpy_array):
     """ argmax implementation that chooses randomly between ties """
-    raise NotImplementedError
-
+    # max_val = max(Q[observation][k] for k in Q[observation])
+    # a = 
+    return np.argmax(np.random.random(numpy_array.shape) * (numpy_array==numpy_array.max()), axis=None)
 
 def make_epsilon_greedy_policy(Q, epsilon, nA):
     """
@@ -250,8 +247,20 @@ def make_epsilon_greedy_policy(Q, epsilon, nA):
         the probabilities for each action in the form of a numpy array of length nA.
 
     """
+    
+    def policy_fn(observation):
+        prob = []
+        actions = np.array([ k for k in Q[observation] ])
+        numAct = actions.shape[0]
+        A = argmax(actions)
+        for a in actions:
+            if a == A:
+                prob.append(1-epsilon+epsilon/numAct)
+            else:
+                prob.append(epsilon/numAct)
+                
+        return prob
 
-    raise NotImplementedError
     return policy_fn
 
 
@@ -273,6 +282,53 @@ def mc_control_epsilon_greedy(env, num_episodes, discount_factor=1.0, epsilon=0.
         policy is a function that takes an observation as an argument and returns
         action probabilities
     """
+    
+    # def policy(observation):
+    #     numAct = env.action_space.n
+    #     prob = np.zeros(numAct)
+    #     for _ in range(0,numAct)
+    #         prob.append(epsilon/numAct)
+    
+    #     return prob
+    
+    # N = defaultdict(float)
+    # Returns = defaultdict(float)
+    # Q = defaultdict(float)
+    
+    # for ep in range(0,num_episodes):
+    #     print('ep: ' , ep)
+    #     next_observation = env.reset()
+    #     G = 0
+        
+    #     seen = {}
+    #     while True:
+    #         action = policy(next_observation)
+    #         seen = {(next_observation),action : 1}
+    #         next_observation, reward, done, _ = env.step(action)
+    #         G = discount_factor*G + reward
+    #         if (next_observation), not in seen:
+    #             Returns[(next_observation)] = G
+    #             if (next_observation) not in N:                   
+    #                 N[(next_observation)] = 1#np.random.normal(0,1,1)
+    #             else:
+    #                 N[(next_observation)] += 1
+                    
+    #             if (next_observation) not in  V:
+    #                 Q[(next_observation)] = 0
+                
+                    
+    #             temp_Q = Q[(next_observation)]
+    #             Q[(next_observation)] = temp_Q + 1/N[(next_observation)]*(G - temp_Q)
+                
+                
+    #         if done == True:
+    #             break;
+                
+    
+    # # print(V)
+    # # print(V[([0], [1], False)])   
+    # return Q
+    
     raise NotImplementedError
 
 
