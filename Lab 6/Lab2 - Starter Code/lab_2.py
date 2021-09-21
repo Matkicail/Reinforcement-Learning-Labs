@@ -190,37 +190,30 @@ def mc_prediction(policy, env, num_episodes, discount_factor=1.0, max_steps_per_
     V = defaultdict(float)
     
     for ep in range(0,num_episodes):
-        print('ep: ' , ep)
-        next_observation = env.reset()
-        G = 0
-        
-        seen = {}
-        seen = {(next_observation) : 1}
+        if ep % 1000 == 0:
+            print("\rEpisode {}/{}.".format(ep, num_episodes), end="")
+            sys.stdout.flush()
+            
+        ep_steps = []
+        curr_observation = env.reset()
         while True:
-            action = policy(next_observation)
+            action = blackjack_sample_policy(curr_observation)
             next_observation, reward, done, _ = env.step(action)
-            G = discount_factor*G + reward
-            if (next_observation) not in seen:
-                Returns[(next_observation)] = G
-                if (next_observation) not in N:                   
-                    N[(next_observation)] = 1#np.random.normal(0,1,1)
-                else:
-                    N[(next_observation)] += 1
-                    
-                if (next_observation) not in  V:
-                    V[(next_observation)] = 0
+            ep_steps.append((curr_observation,action,reward))
+            if done:
+                break
+            curr_observation = next_observation
+        
+        G = 0
+        states = [s[0] for s in ep_steps]
+        for s in states:
+            first = next(i for i,step in enumerate(ep_steps) if step[0] == s)
+            G = sum([(discount_factor**i) * step[2] for i,step in enumerate(ep_steps[first:])])
+            
+            Returns[s] += G
+            N[s] += 1
+            V[s] = Returns[s] / N[s]
                 
-                    
-                temp_V = V[(next_observation)]
-                V[(next_observation)] = temp_V + 1/N[(next_observation)]*(G - temp_V)
-                
-            if done == True:
-                break;
-                
-    
-    # print(V)
-    # print(V[([0], [1], False)])  
-    
     return V
     
     
@@ -249,15 +242,11 @@ def make_epsilon_greedy_policy(Q, epsilon, nA):
     """
     
     def policy_fn(observation):
-        prob = []
-        actions = np.array([ k for k in Q[observation] ])
-        numAct = actions.shape[0]
-        A = argmax(actions)
-        for a in actions:
-            if a == A:
-                prob.append(1-epsilon+epsilon/numAct)
-            else:
-                prob.append(epsilon/numAct)
+        
+        prob = np.ones(nA)
+        A = argmax(Q[observation])
+        prob = prob * epsilon/nA
+        prob[A] += 1-epsilon
                 
         return prob
 
@@ -283,53 +272,39 @@ def mc_control_epsilon_greedy(env, num_episodes, discount_factor=1.0, epsilon=0.
         action probabilities
     """
     
-    # def policy(observation):
-    #     numAct = env.action_space.n
-    #     prob = np.zeros(numAct)
-    #     for _ in range(0,numAct)
-    #         prob.append(epsilon/numAct)
+    N = defaultdict(float)
+    Returns = defaultdict(float)
+    Q = defaultdict(lambda: np.zeros(env.action_space.n))
+    policy = make_epsilon_greedy_policy(Q, epsilon, env.action_space.n)
     
-    #     return prob
-    
-    # N = defaultdict(float)
-    # Returns = defaultdict(float)
-    # Q = defaultdict(float)
-    
-    # for ep in range(0,num_episodes):
-    #     print('ep: ' , ep)
-    #     next_observation = env.reset()
-    #     G = 0
+    for ep in range(0,num_episodes):
+        if ep % 1000 == 0:
+            print("\rEpisode {}/{}.".format(ep, num_episodes), end="")
+            sys.stdout.flush()
+            
+        ep_steps = []
+        curr_observation = env.reset()
+        while True:
+            actions_p = policy(curr_observation)
+            action = np.random.choice(np.arange(len(actions_p)), p=actions_p)
+            next_observation, reward, done, _ = env.step(action)
+            ep_steps.append((curr_observation,action,reward))
+            if done:
+                break
+            curr_observation = next_observation
         
-    #     seen = {}
-    #     while True:
-    #         action = policy(next_observation)
-    #         seen = {(next_observation),action : 1}
-    #         next_observation, reward, done, _ = env.step(action)
-    #         G = discount_factor*G + reward
-    #         if (next_observation), not in seen:
-    #             Returns[(next_observation)] = G
-    #             if (next_observation) not in N:                   
-    #                 N[(next_observation)] = 1#np.random.normal(0,1,1)
-    #             else:
-    #                 N[(next_observation)] += 1
-                    
-    #             if (next_observation) not in  V:
-    #                 Q[(next_observation)] = 0
+        G = 0
+        state_act = [(sa[0],sa[1]) for sa in ep_steps]
+        for s, a in state_act:
+            first = next(i for i,step in enumerate(ep_steps) if step[0] == s and step[1] == a)
+            G = sum([(discount_factor**i) * step[2] for i,step in enumerate(ep_steps[first:])])
+            
+            Returns[s,a] += G
+            N[s,a] += 1
+            Q[s][a] = Returns[s,a] / N[s,a]
+            policy = make_epsilon_greedy_policy(Q, epsilon, env.action_space.n)
                 
-                    
-    #             temp_Q = Q[(next_observation)]
-    #             Q[(next_observation)] = temp_Q + 1/N[(next_observation)]*(G - temp_Q)
-                
-                
-    #         if done == True:
-    #             break;
-                
-    
-    # # print(V)
-    # # print(V[([0], [1], False)])   
-    # return Q
-    
-    raise NotImplementedError
+    return Q,policy
 
 
 def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_=False):
@@ -434,9 +409,9 @@ def run_mc():
     values_10k = mc_prediction(
         blackjack_sample_policy, blackjack_env, num_episodes=10000, print_=True)
     
-   # print(values_10k)
+    # print(values_10k)
     blackjack_plot_value_function(values_10k, title="10,000 Steps")
-
+    
     print("\nmc_prediction 500,000_steps\n")
     values_500k = mc_prediction(
         blackjack_sample_policy, blackjack_env, num_episodes=500000, print_=True)
@@ -484,5 +459,6 @@ def run_td():
 
 
 if __name__ == '__main__':
+    
     run_mc()
     run_td()
