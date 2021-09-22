@@ -190,9 +190,8 @@ def mc_prediction(policy, env, num_episodes, discount_factor=1.0, max_steps_per_
     V = defaultdict(float)
     
     for ep in range(0,num_episodes):
-        if ep % 1000 == 0:
-            print("\rEpisode {}/{}.".format(ep, num_episodes), end="")
-            sys.stdout.flush()
+        print("\rEpisode {}/{}.".format(ep, num_episodes), end="")
+        sys.stdout.flush()
             
         ep_steps = []
         curr_observation = env.reset()
@@ -278,9 +277,8 @@ def mc_control_epsilon_greedy(env, num_episodes, discount_factor=1.0, epsilon=0.
     policy = make_epsilon_greedy_policy(Q, epsilon, env.action_space.n)
     
     for ep in range(0,num_episodes):
-        if ep % 1000 == 0:
-            print("\rEpisode {}/{}.".format(ep, num_episodes), end="")
-            sys.stdout.flush()
+        print("\rEpisode {}/{}.".format(ep, num_episodes), end="")
+        sys.stdout.flush()
             
         ep_steps = []
         curr_observation = env.reset()
@@ -336,11 +334,34 @@ def SARSA(env, num_episodes, discount_factor=1.0, epsilon=0.1, alpha=0.5, print_
         episode_lengths=np.zeros(num_episodes),
         episode_rewards=np.zeros(num_episodes))
 
-    # Update statistics after getting a reward - use within loop, call the following lines
-    # stats.episode_rewards[i_episode] += reward
-    # stats.episode_lengths[i_episode] = t
 
-    raise NotImplementedError
+    for ep in range(0,num_episodes):
+        print("\rEpisode {}/{}.".format(ep, num_episodes), end="")
+        sys.stdout.flush()
+            
+        curr_observation = env.reset()
+        curr_actions_p = policy(curr_observation)
+        curr_action = np.random.choice(np.arange(len(curr_actions_p)), p=curr_actions_p)
+        
+        ep_len = 1
+        while True:
+            next_observation, reward, done, _ = env.step(curr_action)
+            next_actions_p = policy(next_observation)
+            next_action = np.random.choice(np.arange(len(next_actions_p)), p=next_actions_p)
+            Q[curr_observation][curr_action] += alpha*(reward + discount_factor*Q[next_observation][next_action] - Q[curr_observation][curr_action])
+            #Update statistics after getting a reward - use within loop, call the following lines
+            stats.episode_rewards[ep] += reward
+            ep_len += 1
+            
+            if done:
+                break
+            curr_observation = next_observation
+            curr_action = next_action
+
+        stats.episode_lengths[ep] = ep_len
+
+    return Q,stats
+    
 
 
 def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, print_=False):
@@ -361,6 +382,8 @@ def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, 
         Q is the optimal action-value function, a dictionary mapping state -> action values.
         stats is an EpisodeStats object with two numpy arrays for episode_lengths and episode_rewards.
     """
+    
+    
 
     # A nested dictionary that maps state -> (action -> action-value).
     Q = defaultdict(lambda: np.zeros(env.action_space.n))
@@ -373,9 +396,30 @@ def q_learning(env, num_episodes, discount_factor=1.0, epsilon=0.05, alpha=0.5, 
         episode_lengths=np.zeros(num_episodes),
         episode_rewards=np.zeros(num_episodes))
 
-    # Update statistics after getting a reward - use within loop, call the following lines
-    # stats.episode_rewards[i_episode] += reward
-    # stats.episode_lengths[i_episode] = t
+    for ep in range(0,num_episodes):
+        print("\rEpisode {}/{}.".format(ep, num_episodes), end="")
+        sys.stdout.flush()
+            
+        curr_observation = env.reset()
+        
+        ep_len = 1
+        while True:
+            actions_p = policy(curr_observation)
+            action = np.random.choice(np.arange(len(actions_p)), p=actions_p)
+            next_observation, reward, done, _ = env.step(action)
+            max_a = np.argmax(Q[next_observation])
+            Q[curr_observation][action] += alpha*(reward + discount_factor*Q[next_observation][max_a] - Q[curr_observation][action])
+            #Update statistics after getting a reward - use within loop, call the following lines
+            stats.episode_rewards[ep] += reward
+            ep_len += 1
+            
+            if done:
+                break
+            curr_observation = next_observation
+
+        stats.episode_lengths[ep] = ep_len
+
+    return Q,stats
 
 
 def run_mc():
