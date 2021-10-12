@@ -1,4 +1,4 @@
-The pogchamp students of this project are (cringe)
+
 # STUDENT NUMBERS
 # 1886648
 # 1851234 
