@@ -1,8 +1,3 @@
-# STUDENT NUMBERS
-# 1886648
-# 1851234 
-# 1669326
-
 Summary:
 
 The DQN algorithm is a reinforcement learning technique that combines the Q-learning algorithm and neural networks for its value function approximation.
