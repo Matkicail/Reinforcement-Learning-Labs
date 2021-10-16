@@ -1,0 +1,48 @@
+# STUDENT NUMBERS
+# 1886648
+# 1851234 
+# 1669326
+
+Summary:
+
+The DQN algorithm is a reinforcement learning technique that combines the Q-learning algorithm and neural networks for its value function approximation.
+It involves the use of experience replay where states, their corresponding action taken, the resultant state, the reward gained and whether the resultant state is terminal or not are stored in memory for later use in optimizing the value function approximation.
+Involved as well are a policy and target neural network that are used in optimizing the value function approximation and in choosing a greedy action to take following an epsilon-greedy policy.
+
+Training Procedure:
+
+The algorithm starts by performing a set number of steps in the environment for the initial populating of the experience replay memory and follows with additional steps; the action taken in a step is determined using an epsilon-greedy policy.
+During the post-initial steps, the policy and target neural network's parameters periodically are updated. The target neural network's parameters are updated from a copy of the policy neural network's parameters and the policy neural network's parameters are
+updated using backpropagation. The backpropagation requires taking randomized batches of the data from the replay experience memory. The state data is used with the policy neural network to get the state-action values of those states and the action data is used to
+restrict the state-action values to only those associated with the action taken for its state. The expected state-action values are acquired from using the resultant state data with the target neural network and only the greatest state-action values from non-terminal
+resultant states are used for the expected state-action values. These state-action values and expected state-action values are then used for the loss calculations during backpropagation with the loss function taking an absolute value with clipping of (-1, 1) of the
+difference of the expected state-action values and state-action values.
+
+Q-Network Architecture:
+
+The architecture follows the same used in the research paper, but differs by having 1 channel rather than the 4 in the paper.
+
+Input layer:      1 x (84 x 84) layer.
+Hidden Layer 1:  32 x (8 x 8 - 4 stride) convolution layer with ReLU activation functions.
+Hidden Layer 2:  64 x (4 x 4 - 2 stride) convolution layer with ReLU activation functions.
+Hidden Layer 3:  64 x (3 x 3 - 1 stride) convolution layer with ReLU activation functions.
+Hidden Layer 4: 512 x fully-connected layer with ReLU activation functions.
+Output layer:     6 x fully-connected layer with linear activation functions.
+
+Hyper-parameters:
+
+    "seed": 42,  # The seed is used to randomised the initial state of the environment (env).
+    "env": "PongNoFrameskip-v4",  # ID name of the game used to pull the class from the Gym directory which stores environments.
+    "replay-buffer-size": int(5e3),  # Size of the replay buffer with a size of 5000.
+    "learning-rate": 1e-4,  # The learning rate used in the Adam optimizer for updating the neural network parameters with a value of 0.0001.
+    "discount-factor": 0.99,  # The discount factor used for changing the percentage contribution that the resultant states' state-action values have towards the expected state-action values.
+    "num-steps": int(1e6),  # Total number of steps to run the environment for with value 1000000.
+    "batch-size": 256,  # Number of transitions to optimize at the same time and pull from the experience replay memory.
+    "learning-starts": 10000,  # Number of steps before learning starts; the updating of the policy and target neural networks.
+    "learning-freq": 5,  # Number of steps between every optimization of the policy neural network.
+    "use-double-dqn": False,  # Wether double deep Q-learning is used or not.
+    "target-update-freq": 1000,  # Number of steps between every target neural network update of its parameters.
+    "eps-start": 1.0,  # e-greedy start threshold. Maximum exploration rate and value for epsilon.
+    "eps-end": 0.01,  # e-greedy end threshold. Minimum exploration rate and value for epsilon.
+    "eps-fraction": 0.1,  # Fraction of num-steps and is used in calculating the percentage contribution that eps-end - eps-start has on the value on epsilon (the rate of change of epsilon).
+    "print-freq": 10,  # The episodic interval for printing out information to the console.
