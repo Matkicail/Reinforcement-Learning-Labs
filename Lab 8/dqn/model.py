@@ -2,7 +2,6 @@ from gym import spaces
 import torch
 import torch.nn as nn
 
-
 class DQN(nn.Module):
 	"""
 	A basic implementation of a Deep Q-Network. The architecture is the same as that described in the
@@ -36,30 +35,15 @@ class DQN(nn.Module):
 		self.bn3 = nn.BatchNorm2d(64)
 		self.lin1 = nn.Linear(3136, 512)
 		self.head = nn.Linear(512, action_space.n)
-		# self.head = nn.Linear(512, action_space.n)
         # raise NotImplementedError
 
 	def forward(self, x):
 		# TODO Implement forward pass
 		x = nn.functional.relu(self.bn1(self.conv1(x)))
-		# x = nn.functional.relu(self.conv1(x))
-		# print(x.size())
 		x = nn.functional.relu(self.bn2(self.conv2(x)))
-		# x = nn.functional.relu(self.conv2(x))
-		# print(x.size())
 		x = nn.functional.relu(self.bn3(self.conv3(x)))
-		# x = nn.functional.relu(self.conv3(x))
-		# print(x.size())
-		# return_object = self.head(x.view(x.size(0), -1))
 		x = x.view(x.size(0), -1)
-		# print(x.size())
 		x = nn.functional.relu(self.lin1(x))
-		# print(x.size())
-		# return_object = self.head(torch.flatten(x, 1))
-		# x = torch.flatten(x, 1)
 		x = self.head(x)
-		# print(x.size())
-		# print(self.bn3.size())
-		# return return_object
 		return x
 		# raise NotImplementedError
