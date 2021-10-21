@@ -46,7 +46,7 @@ def customGym():
     reward_gen.add_kill_event("minotaur",reward=2, repeatable=False) #minotaur guards the exit and is in the maze, which requires the WoD to do
     # may need more rewards as we continue
     env = gym.make(
-        "MiniHack-River-v0",
+        "Quest-Hard-v0,
         observation_keys=("chars", "inv_letters", "message"),
             reward_manager = reward_gen
     )
