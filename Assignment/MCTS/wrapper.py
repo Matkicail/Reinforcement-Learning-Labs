@@ -33,7 +33,7 @@ class BasicWrapper(gym.Wrapper):
         if done == True:
             if reward == 0:
                 reward = -50
-            else if reward == 2: 
+            elif reward == 2: 
                 reward = 50
 
         
