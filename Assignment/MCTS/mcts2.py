@@ -147,7 +147,7 @@ class MonteCarloTreeSearchNode():
             #     current_node = current_node.best_child()
         return current_node , env
 
-    def best_action(self,seeds,actions, simulation_no=1000):
+    def best_action(self,seeds,actions, simulation_no=200):
         print('------------------ children' , self.children)
 
         

@@ -48,7 +48,7 @@ def createActionSpace():
         # nethack.Command.CLOSE,
         nethack.Command.DROP,
         nethack.Command.EAT,
-        # nethack.Command.ESC,
+        nethack.Command.ESC,
         # nethack.Command.FIRE,
         # nethack.Command.FIGHT,
         # nethack.Command.INVOKE,
