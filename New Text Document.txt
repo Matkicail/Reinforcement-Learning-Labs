@@ -1,0 +1,6 @@
+know basic things
+value functions
+basic returns
+do not need to know the update functions
+
+understanding advantages of certain methods over others in specific cases. What might break it in some cases
