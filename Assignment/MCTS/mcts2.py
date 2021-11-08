@@ -8,11 +8,13 @@ from collections import defaultdict
 import random
 import csv
 
-dummyEnv = BasicWrapper(customGym())
-actionSpaceSize = dummyEnv.action_space.n
-actionsTaken = []
-class State():
-    def __init__(self, state, reward=None,done=False,info=None):
+dummyEnv = BasicWrapper(customGym()) 
+actionSpaceSize = dummyEnv.action_space.n # action space
+actionsTaken = [] # tracks all actions taken during the game
+
+# holds state info
+class State(): 
+    def __init__(self, state, reward=0,done=False,info=None):
         # print('init state')
         self.state_s = state
         self.reward = reward
@@ -29,59 +31,48 @@ class MonteCarloTreeSearchNode():
         self.state = state #observation,reward,done,info,actions
         self.parent = parent #parent node in tree
         self.parent_action = parent_action # action parent took to get here
-        self.children = [] 
-        self._number_of_visits = 0
-        self._results = defaultdict(int)
-        self._results[0] = 0
-        self._results[1] = 0
-        self._results[-0.01] = 0
+        self.children = [] # children of this node
+        self._number_of_visits = 1
+        self._results = defaultdict(int) 
         self._untried_actions = None
         self._untried_actions = self.untried_actions()
-		
+
         return
 
+    #checks which actions have not been tried from this node
     def untried_actions(self):
         # print('untried_actions' , self.state)
         self._untried_actions = self.state.legal_actions
         return self._untried_actions
 
     def q(self):
-        loses = self._results[0]
-        wins = self._results[1]
-        # steps = self._results[-0.01]
-        # print('los' , loses)
-        # print('win' , wins)
-        # print('st' , steps)
-        return wins - loses
 
-    # def qs(self):
-    #     loses = self._results[0]
-    #     wins = self._results[1]
-    #     steps = self._results[-0.01]
-    #     print('los' , loses)
-    #     print('win' , wins)
-    #     print('st' , steps)
-    #     return wins - steps - loses
+        total = 0
+        for r in self._results:
+            total += r*self._results[r]
+
+        return total
 
     def n(self):
         return self._number_of_visits
 
+    # expand from node to next node
     def expand(self, env):
         action = self._untried_actions.pop()
+        # print('ex action' , action)
 
         obs, reward, done, info = env.step(action)
-        # self.state.reward += reward
 
         next_state = State(obs,reward,done,info)
         child_node = MonteCarloTreeSearchNode(state = next_state, parent=self, parent_action=action)
-
         self.children.append(child_node)
+
         return child_node , env
 
     def is_terminal_node(self):
-        # print('is_terminal_node')
         return self.state.done
 
+    #simulation until the end of a game is reached
     def rollout(self , env):
         current_rollout_state = self.state
         
@@ -91,14 +82,14 @@ class MonteCarloTreeSearchNode():
             
             action = self.rollout_policy(possible_moves)
             obs, reward, done, info = env.step(action)
-            # self.state.reward += reward
             current_rollout_state = State(obs,reward,done,info)
 
         return current_rollout_state.reward
 
+
+    #backpropagates from leaf node to root
     def backpropagate(self, result):
         self._number_of_visits += 1.
-        # print(self._results)
         self._results[result] += 1.
         if self.parent:
             self.parent.backpropagate(result)
@@ -106,28 +97,17 @@ class MonteCarloTreeSearchNode():
     def is_fully_expanded(self):
         return len(self._untried_actions) == 0
 
+    # UCT to find best child node 
     def best_child(self, c_param=0.1):
-        # for c in self.children:
-        #     print('q',c.q())
-        #     print('n',c.n())
-        #     print('sn',np.log(self.n()))
         choices_weights = [(c.q() / c.n()) + c_param * np.sqrt((2 * np.log(self.n()) / c.n())) for c in self.children]
         child = np.random.choice(np.flatnonzero(choices_weights == max(choices_weights)))
         return self.children[child]
 
-    # def best_childf(self, c_param=0.1):
-    #     for c in self.children:
-    #         print(c)
-    #         print('q',c.qs())
-    #         print('n',c.n())
-    #         print('sn',np.log(self.n()))
-    #     choices_weights = [(c.qs() / c.n()) + c_param * np.sqrt((2 * np.log(self.n()) / c.n())) for c in self.children]
-    #     child = np.random.choice(np.flatnonzero(choices_weights == max(choices_weights)))
-    #     return self.children[child]
-
+    # default policy for simulation
     def rollout_policy(self, possible_moves):
         return possible_moves[np.random.randint(len(possible_moves))]
 
+    
     def _tree_policy(self,env):
         current_node = self
         while not current_node.is_terminal_node():
@@ -137,54 +117,38 @@ class MonteCarloTreeSearchNode():
             elif random.uniform(0,1)<.5:
                 current_node = current_node.best_child()
             else:
-                if not current_node.is_fully_expanded():	
+                if not current_node.is_fully_expanded():
                     return current_node.expand(env)
                 else:
                     current_node = current_node.best_child()
-            # if not current_node.is_fully_expanded():
-            #     return current_node.expand(env)
-            # else:
-            #     current_node = current_node.best_child()
         return current_node , env
+    
+    
+    # called to find the best next action 
+    # goes throught the 4 processes some number of times.
+    def best_action(self,actions, simulation_no=7):
 
-    def best_action(self,seeds,actions, simulation_no=200):
-        print('------------------ children' , self.children)
-
-        
         for i in range(simulation_no):
             print('\t\tSimulation {0}'.format(i), end="\r")
-            choices_weights = [(c.q() / c.n()) + 0.1 * np.sqrt((2 * np.log(self.n()) / c.n())) for c in self.children]
-            # print('be cw ', choices_weights)
-            # # print(np.argmax(choices_weights))
-            # # print(self.children[np.argmax(choices_weights)])
-            # print('------------------ children' , self.children)
-            # print(self.children[np.argmax(choices_weights)].parent_action)
-
 
             env2 = BasicWrapper(customGym())
             initial_state2 = env2.reset()
 
+            # to get environment to the same step as the real game the same actions must be performed
             for act in actions:
                 obs, r, done, info = env2.step(act)
 
-            # env2.render()
-
+            # selection and expansion
             v = self._tree_policy(env2)
+            # simulation
             reward = v[0].rollout(v[1])
+            # bckpropagation
+            v[0].backpropagate(reward)
 
-            p = v[0].backpropagate(reward)
-            
-        choices_weights = [(c.q() / c.n()) + 0.1 * np.sqrt((2 * np.log(self.n()) / c.n())) for c in self.children]
-        print(choices_weights)
-        print(np.argmax(choices_weights))
-        # print(self.children[np.argmax(choices_weights)])
-        # print(self.children)
-        print(self.children[np.argmax(choices_weights)].parent_action)
-        
-        
+
         return self.best_child(c_param=0.1)
 
-	
+
 
 
 def main():
@@ -192,70 +156,63 @@ def main():
     csv_save = open('minihack_rewards.csv', 'w', encoding='UTF8', newline='')
     writer = csv.writer(csv_save)
 
-	# creates random seed
+    # number of steps allowed in the game since it never ends
+    iters =900
 
-    # make_seeds = lambda: (int(random.random()*1e19), int(random.random()*1e19), False)
-    # seed = make_seeds()
-    for mpx in range(100):
-        seed = (907, 101, False)
+    for mpx in range(1):
+        
+        # initialize environment + actions and reward trackers
         prev_actions = []
         rewards = []
         actionsTaken = []
-        # creates env
+        
         env = BasicWrapper(customGym())
-        # sets seed for env
         rewardArr = []
+        
         initial_state = env.reset()
         initial_state = State(state = initial_state)
         env.render()
 
-        # print(env.action_space.n)
-        # print(env.action_space)
-
-        # gets seed from env
-        seeds = env.get_seeds()
-
         root = MonteCarloTreeSearchNode(state = initial_state)
-        selected_node = root.best_action(seeds,prev_actions)
-        print('results' , selected_node._results)
-
-        print('action : ' , selected_node.parent_action)
-        prev_actions.append(selected_node.parent_action)
         
+        # call MCTS function to select best action
+        selected_node = root.best_action(prev_actions)
+        # records the action taken
+        prev_actions.append(selected_node.parent_action)
 
+        # uses action to step in the environment
         next_state, reward, done, info = env.step(selected_node.parent_action)
+        
+        # records reward recieved
         rewards.append(reward)
         next_state = State(next_state,reward,done,info)
 
-
         env.render()
         cnt = 0
-        while not done:
+        
+        # loops through the rest of the game repeatedly calling the 
+        # best_action function and making the selected move in the environment
+        for it in range(iters):
+            if done:
+                break;
             cnt += 1
             print("Current Game {0}, current step {1}".format(mpx, cnt))
             selected_node = MonteCarloTreeSearchNode(state = next_state)
-            selected_node = selected_node.best_action(seeds,prev_actions)
-            print('results' , selected_node._results)
+            selected_node = selected_node.best_action(prev_actions)
 
-            
-            print('action : '  , selected_node.parent_action)
+
             prev_actions.append(selected_node.parent_action)
 
             next_state, reward, done, info = env.step(selected_node.parent_action)
             rewards.append(reward)
+            writer.writerow([reward])
+
 
             next_state = State(next_state,reward,done,info)
 
-            selected_node = MonteCarloTreeSearchNode(state = next_state)
-            # print(env.action_space.n)
-            # print(env._actions)
-            # print('**********************its children' , selected_node.children)
             env.render()
         rewardArr = np.array(rewards)
+        # saves the rewards received during game
         np.savetxt("rewardArr-{0}".format(mpx), rewardArr)
-        try:
-            writer.writerow(rewards) 
-        except:
-            pass
 
 main()
