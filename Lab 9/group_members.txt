@@ -1,5 +1,4 @@
 Group Members
-# Name:Student Number
-# Name:Student Number
-# Name:Student Number
-# Name:Student Number
+# Matthew Kruger:1669326
+# Michael-John Brewer:1851234
+# Mikayla Narothan:1886648
